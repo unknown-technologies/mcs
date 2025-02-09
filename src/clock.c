@@ -74,7 +74,7 @@ static void UIProcessClockAlarm(UIPanel* self, float ignore_y)
 				slot->y <= pos_y + GXGetFontHeight(&mcs->deface, size)) {
 			clk->enabled = FALSE;
 			clk->triggered = FALSE;
-			AIStopAlarm();
+			SNDStopAlarm();
 		}
 
 		/* check if touch point is on "ENA" */

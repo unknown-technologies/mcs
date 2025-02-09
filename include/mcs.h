@@ -8,6 +8,7 @@
 #include <mcs/mt.h>
 #include <mcs/dsp.h>
 #include <mcs/ai.h>
+#include <mcs/snd.h>
 #include <time.h>
 
 typedef struct MCS MCS;

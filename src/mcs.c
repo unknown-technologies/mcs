@@ -25,7 +25,7 @@ void MCSInit(MCS* mcs, int width, int height)
 
 	MTInit(&mcs->mt);
 
-	if(!AIInit()) {
+	if(!SNDInit()) {
 		printf("Failed to initialize sound system\n");
 		exit(1);
 	}
@@ -66,8 +66,14 @@ static void ALRMProcess(MCSClock* clk)
 
 	if(clk->enabled && clk->next_alarm <= t) {
 		/* trigger the alarm */
+		if(!clk->triggered) {
+			/* only trigger the alarm sound ONCE instead of
+			 * every frame within the second when the alarm is
+			 * supposed to be triggered ...
+			 */
+			SNDPlayAlarm();
+		}
 		clk->triggered = TRUE;
-		AIPlayAlarm();
 	}
 
 	clk->next_alarm = alarm_t;

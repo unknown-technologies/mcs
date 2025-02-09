@@ -3,10 +3,7 @@
 
 #include <mcs/types.h>
 
-BOOL	AIInit(void);
+BOOL	AIInit(void (*callback)(s16*, unsigned int));
 void	AIDestroy(void);
-
-void	AIPlayAlarm(void);
-void	AIStopAlarm(void);
 
 #endif

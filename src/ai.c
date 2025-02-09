@@ -18,12 +18,14 @@ static pthread_t thread_id;
 
 static s16 buffer[FRAMES * CHANNELS];
 
-static void	AIiFillBuffer(void);
+static void	(*fill_buffer)(s16* buffer, unsigned int frames);
 static void*	AIiThread(void* arg);
 
-BOOL AIInit(void)
+BOOL AIInit(void (*callback)(s16*, unsigned int))
 {
 	int err;
+
+	fill_buffer = callback;
 
 	if((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK,
 					0)) < 0) {
@@ -67,42 +69,6 @@ void AIDestroy(void)
 /******************************************************************************/
 /* internal functions                                                         */
 /******************************************************************************/
-extern const DSPHeader alarmL[];
-extern const DSPHeader alarmR[];
-
-static ADPCM dsp_alarm_l;
-static ADPCM dsp_alarm_r;
-
-static volatile BOOL play_alarm = FALSE;
-static volatile BOOL last_play_alarm = FALSE;
-
-void AIPlayAlarm(void)
-{
-	play_alarm = TRUE;
-}
-
-void AIStopAlarm(void)
-{
-	play_alarm = FALSE;
-}
-
-static void AIiFillBuffer(void)
-{
-	if(play_alarm && !last_play_alarm) {
-		DSPInit(&dsp_alarm_l, alarmL);
-		DSPInit(&dsp_alarm_r, alarmR);
-	}
-
-	last_play_alarm = play_alarm;
-
-	if(play_alarm) {
-		DSPDecode(&dsp_alarm_l, buffer, FRAMES, 2);
-		DSPDecode(&dsp_alarm_r, buffer + 1, FRAMES, 2);
-	} else {
-		memset(buffer, 0, sizeof(buffer));
-	}
-}
-
 static void* AIiThread(void* arg)
 {
 	int err;
@@ -110,7 +76,9 @@ static void* AIiThread(void* arg)
 	(void) arg;
 
 	while(!quit_thread) {
-		AIiFillBuffer();
+		if(fill_buffer) {
+			fill_buffer(buffer, FRAMES);
+		}
 
 		snd_pcm_sframes_t frames = snd_pcm_writei(handle, buffer,
 				FRAMES);
