@@ -1,0 +1,108 @@
+#include <mcs.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
+
+extern const char defacev1[];
+
+static unsigned long get_time(void)
+{
+	struct timespec t;
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	return t.tv_sec * 1000 + t.tv_nsec / 1000000;
+}
+
+void MCSInit(MCS* mcs, int width, int height)
+{
+	memset(mcs, 0, sizeof(MCS));
+
+	mcs->width = width;
+	mcs->height = height;
+
+	GXInit();
+
+	MTInit(&mcs->mt);
+
+	if(!AIInit()) {
+		printf("Failed to initialize sound system\n");
+		exit(1);
+	}
+
+	GXCreateFont(&mcs->deface, defacev1);
+
+	UIInit(&mcs->ui, mcs);
+	UICreateClock(&mcs->ui);
+
+	/* initialize next alarm such that it's in the future */
+	time(&mcs->clock.next_alarm);
+	mcs->clock.next_alarm += 10;
+}
+
+void MCSFree(MCS* mcs)
+{
+	GXDestroyFont(&mcs->deface);
+
+	AIDestroy();
+	MTClose(&mcs->mt);
+}
+
+static void ALRMProcess(MCSClock* clk)
+{
+	time_t t;
+	time(&t);
+
+	struct tm alarm_tm = *localtime(&t);
+	alarm_tm.tm_hour = clk->alarm.hour;
+	alarm_tm.tm_min = clk->alarm.minute;
+	alarm_tm.tm_sec = 0;
+	time_t alarm_t = mktime(&alarm_tm);
+
+	if(alarm_t < t) {
+		alarm_tm.tm_mday++;
+		alarm_t = mktime(&alarm_tm);
+	}
+
+	if(clk->enabled && clk->next_alarm <= t) {
+		/* trigger the alarm */
+		clk->triggered = TRUE;
+		AIPlayAlarm();
+	}
+
+	clk->next_alarm = alarm_t;
+}
+
+void MCSProcess(MCS* mcs)
+{
+	ALRMProcess(&mcs->clock);
+
+	MTPoll(&mcs->mt);
+	UIProcess(&mcs->ui);
+}
+
+static unsigned long last_time = 0;
+static unsigned long frames = 0;
+static unsigned long fps = 0;
+
+void MCSRender(MCS* mcs)
+{
+	unsigned long now = get_time();
+	unsigned long dt = now - last_time;
+	if(dt >= 1000) {
+		last_time = now;
+		fps = frames;
+		frames = 0;
+	} else {
+		frames++;
+	}
+
+	float color[4] = { 1, 1, 1, 1 };
+	char buf[32];
+
+	sprintf(buf, "FPS: %lu", fps);
+	GXDrawMicroText(mcs->width - strlen(buf) * 6, mcs->height - 9,
+			color, buf);
+
+	UIDraw(&mcs->ui);
+}
