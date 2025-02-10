@@ -5,6 +5,7 @@
 #include <mcs/shader.h>
 #include <mcs/gx.h>
 #include <mcs/font.h>
+#include <mcs/tex.h>
 #include <mcs/mt.h>
 #include <mcs/dsp.h>
 #include <mcs/ai.h>

@@ -2,6 +2,7 @@
 #define __FONT_H__
 
 #include <mcs/types.h>
+#include <mcs/tex.h>
 
 typedef struct {
 	float	posX;
@@ -25,9 +26,9 @@ typedef struct {
 } FNT;
 
 typedef struct {
-	GLuint	tex;
 	GLuint	metrics;
 	GLuint	charmap;
+	GXTexture tex;
 	FNT*	font;
 } GXFont;
 
