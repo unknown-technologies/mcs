@@ -99,16 +99,22 @@ void MCSRender(MCS* mcs)
 		last_time = now;
 		fps = frames;
 		frames = 0;
+
+		if(fps > 0 && fps < 60) {
+			printf("FPS drop: %lu\n", fps);
+		}
 	} else {
 		frames++;
 	}
 
+#ifdef SHOW_FPS
 	float color[4] = { 1, 1, 1, 1 };
 	char buf[32];
 
 	sprintf(buf, "FPS: %lu", fps);
 	GXDrawMicroText(mcs->width - strlen(buf) * 6, mcs->height - 9,
 			color, buf);
+#endif
 
 	UIDraw(&mcs->ui);
 }
