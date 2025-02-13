@@ -83,6 +83,12 @@ float GXGetFontHeight(GXFont* font, float size)
 	return fnt->maxheight * scale;
 }
 
+float GXGetFontLineHeight(GXFont* font, float size)
+{
+	(void) font;
+	return size;
+}
+
 float GXGetTextWidth(GXFont* font, float size, const char* text)
 {
 	return GXiGetTextWidth(font, FALSE, size, text);
@@ -157,7 +163,7 @@ void GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
 	glUniform1i(font_tex, 0);
 	glUniform1i(font_charmap, 1);
 	glUniform1i(font_metrics, 2);
-	glUniform2f(font_screensz, 800, 480);
+	glUniform2f(font_screensz, GXGetWidth(), GXGetHeight());
 	glUniform4fv(font_color, 1, color);
 
 	glActiveTexture(GL_TEXTURE0);

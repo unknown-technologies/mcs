@@ -51,7 +51,7 @@ void GXDrawMicroText(unsigned int x, unsigned int y, const float color[4],
 {
 	glUseProgram(microfont_shader);
 	glUniform1i(microfont_tex, 0);
-	glUniform2f(microfont_screensz, 800, 480);
+	glUniform2f(microfont_screensz, GXGetWidth(), GXGetHeight());
 	glUniform4fv(microfont_color, 1, color);
 
 	glActiveTexture(GL_TEXTURE0);

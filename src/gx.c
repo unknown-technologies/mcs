@@ -17,6 +17,19 @@ static const float quad_vtx[] = {
 static GLuint quad_vbo;
 static GLuint quad_vao;
 
+static GLuint quad_shader;
+static GLuint quad_screensz;
+static GLuint quad_pos;
+static GLuint quad_tex;
+static GLuint quad_color;
+static GLuint quad_sdf;
+
+extern const char quad_vert[];
+extern const char quad_frag[];
+
+static int screen_width = 0;
+static int screen_height = 0;
+
 #define	QUAD_VTX_CNT	(sizeof(quad_vtx) / (sizeof(*quad_vtx) * 3))
 
 void GXCheckError(const char* filename, unsigned int line)
@@ -79,6 +92,36 @@ void GXInit(void)
 
 	GXInitMicrofont();
 	GXInitFont();
+
+	/* basic shader to render a quad (plain or sdf) */
+	if(!GXCreateShader(&quad_shader, quad_vert, quad_frag)) {
+		printf("Failed to compile quad shader\n");
+		exit(1);
+	}
+
+	quad_screensz = GXGetShaderUniform(&quad_shader, "screen_size");
+	quad_pos = GXGetShaderUniform(&quad_shader, "quad");
+	quad_tex = GXGetShaderUniform(&quad_shader, "tex");
+	quad_color = GXGetShaderUniform(&quad_shader, "quadcolor");
+	quad_sdf = GXGetShaderUniform(&quad_shader, "sdf");
+}
+
+void GXSetView(int x, int y, int width, int height)
+{
+	screen_width = width;
+	screen_height = height;
+
+	glViewport(x, y, width, height);
+}
+
+int GXGetWidth(void)
+{
+	return screen_width;
+}
+
+int GXGetHeight(void)
+{
+	return screen_height;
 }
 
 void GXRenderQuad(void)
@@ -87,4 +130,19 @@ void GXRenderQuad(void)
 
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, QUAD_VTX_CNT);
+}
+
+void GXRenderTexQuad(const float pos_size[4], const float color[4],
+		BOOL sdf)
+{
+	glUseProgram(quad_shader);
+	glUniform1i(quad_tex, 0);
+	glUniform1i(quad_sdf, sdf);
+	glUniform2f(quad_screensz, screen_width, screen_height);
+	if(color) {
+		glUniform4fv(quad_color, 1, color);
+	}
+	glUniform4fv(quad_pos, 1, pos_size);
+
+	GXRenderQuad();
 }

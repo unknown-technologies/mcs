@@ -4,6 +4,9 @@ void GXCreateTexture(GXTexture* tex, const TXTR* txtr)
 {
 	u8 fmt = (txtr->width >> 14) & 0x03;
 
+	tex->width  = txtr->width & 0x3FFF;
+	tex->height = txtr->height & 0x3FFF;
+
 	GL_ERROR();
 
 	glGenTextures(1, &tex->tex);
@@ -13,22 +16,19 @@ void GXCreateTexture(GXTexture* tex, const TXTR* txtr)
 		case TXTR_FMT_A8:
 		case TXTR_FMT_I8:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R8,
-					txtr->width & 0x3FFF,
-					txtr->height & 0x3FFF, 0,
+					tex->width, tex->height, 0,
 					GL_RED, GL_UNSIGNED_BYTE,
 					txtr->data);
 			break;
 		case TXTR_FMT_RGB8:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8,
-					txtr->width & 0x3FFF,
-					txtr->height & 0x3FFF, 0,
+					tex->width, tex->height, 0,
 					GL_RGB, GL_UNSIGNED_BYTE,
 					txtr->data);
 			break;
 		case TXTR_FMT_RGBA8:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-					txtr->width & 0x3FFF,
-					txtr->height & 0x3FFF, 0,
+					tex->width, tex->height, 0,
 					GL_RGBA, GL_UNSIGNED_BYTE,
 					(GLvoid*) txtr->data);
 			break;

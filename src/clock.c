@@ -4,51 +4,61 @@
 #include <time.h>
 #include <sys/time.h>
 
-static const float color_white[4] = { 1.0, 1.0, 1.0, 1.0 };
-static const float color_gray[4]  = { 0.5, 0.5, 0.5, 1.0 };
-static const float color_red[4]   = { 1.0, 0.0, 0.0, 1.0 };
-static const float color_green[4] = { 0.0, 1.0, 0.0, 1.0 };
-
 static const char* weekdays[] = { "Sunday", "Monday", "Tuesday",
 	"Wednesday", "Thursday", "Friday", "Saturday" };
+
+extern const char TEX_gear[];
+static GXTexture gear_texture;
 
 void UIInitClock(UIPanel* self)
 {
 	MCSClock* clk = &UIGetMCS(self)->clock;
 	clk->editing = FALSE;
 
+	GXCreateTexture(&gear_texture, (const TXTR*) TEX_gear);
+
 	setenv("TZ", "Europe/Vienna", 1);
 	tzset();
+
+	UISetFullscreen(self, TRUE);
+}
+
+void UIDestroyClock(UIPanel* self)
+{
+	(void) self;
+
+	GXDestroyTexture(&gear_texture);
 }
 
 static void UIProcessClockAlarm(UIPanel* self, float ignore_y)
 {
 	MCS* mcs = UIGetMCS(self);
 	MCSClock* clk = &mcs->clock;
+	GXFont* deface = &UIGet(self)->deface;
 
-	float width = GXGetTextWidth(&mcs->deface, 192.0, "DIS  ENA") +
-		GXGetTextWidthAlt(&mcs->deface, 192.0, "00:00");
+	float width = GXGetTextWidth(deface, 192.0, "DIS  ENA") +
+		GXGetTextWidthAlt(deface, 192.0, "00:00");
 	float size = (float) mcs->width / width * 192.0;
-	float height = GXGetFontHeight(&mcs->deface, size);
+	float height = GXGetFontHeight(deface, size);
 	float pos_y = (mcs->height - height) / 2.0;
 
-	float pos_x = GXGetTextWidth(&mcs->deface, size, "DIS ");
+	float pos_x = GXGetTextWidth(deface, size, "DIS ");
 	float pos_dis = 0;
 	float width_dis = pos_x;
 
 	float alarm_x_h = pos_x;
 	float alarm_x_m = alarm_x_h +
-		GXGetTextWidthAlt(&mcs->deface, size, "00:");
-	float alarm_width = GXGetTextWidthAlt(&mcs->deface, size, "00");
+		GXGetTextWidthAlt(deface, size, "00:");
+	float alarm_width = GXGetTextWidthAlt(deface, size, "00");
 
-	pos_x += GXGetTextWidthAlt(&mcs->deface, size, "00:00");
+	pos_x += GXGetTextWidthAlt(deface, size, "00:00");
 	float pos_ena = pos_x;
-	float width_ena = GXGetTextWidth(&mcs->deface, size, " ENA");
+	float width_ena = GXGetTextWidth(deface, size, " ENA");
 
-	float offset = GXGetFontHeight(&mcs->deface, size) * 0.75;
+	float offset = GXGetFontHeight(deface, size) * 0.75;
 	float button_inc = pos_y - offset;
 	float button_dec = pos_y + offset +
-		GXGetFontHeight(&mcs->deface, size);
+		GXGetFontHeight(deface, size);
 
 	float button_end = mcs->height / 2.0;
 
@@ -71,7 +81,7 @@ static void UIProcessClockAlarm(UIPanel* self, float ignore_y)
 		if(slot->x >= pos_dis &&
 				slot->x <= (pos_dis + width_dis) &&
 				slot->y >= pos_y &&
-				slot->y <= pos_y + GXGetFontHeight(&mcs->deface, size)) {
+				slot->y <= pos_y + GXGetFontHeight(deface, size)) {
 			clk->enabled = FALSE;
 			clk->triggered = FALSE;
 			SNDStopAlarm();
@@ -81,7 +91,7 @@ static void UIProcessClockAlarm(UIPanel* self, float ignore_y)
 		if(slot->x >= pos_ena &&
 				slot->x <= (pos_ena + width_ena) &&
 				slot->y >= pos_y &&
-				slot->y <= pos_y + GXGetFontHeight(&mcs->deface, size)) {
+				slot->y <= pos_y + GXGetFontHeight(deface, size)) {
 			clk->enabled = TRUE;
 		}
 
@@ -129,16 +139,20 @@ void UIProcessClock(UIPanel* self)
 {
 	MCS* mcs = UIGetMCS(self);
 	MCSClock* clk = &mcs->clock;
+	GXFont* deface = &UIGet(self)->deface;
 
-	float width = GXGetTextWidth(&mcs->deface, 192.0,
+	float width = GXGetTextWidth(deface, 192.0,
 			"ALRM  ===> EDIT ")
-		+ GXGetTextWidthAlt(&mcs->deface, 192.0, "00:0000.00.0000");
+		+ GXGetTextWidthAlt(deface, 192.0, "00:0000.00.0000");
 	float size = (float) mcs->width / width * 192.0;
 
-	float pos_x = GXGetTextWidth(&mcs->deface, size, "ALRM ");
-	pos_x += GXGetTextWidthAlt(&mcs->deface, size, "00:00");
+	float pos_x = GXGetTextWidth(deface, size, "ALRM ");
+	pos_x += GXGetTextWidthAlt(deface, size, "00:00");
 
-	width = GXGetTextWidth(&mcs->deface, size, " ===> EDIT ");
+	width = GXGetTextWidth(deface, size, " ===> EDIT ");
+
+	float gear_x = mcs->width - size;
+	float gear_y = mcs->height - size;
 
 	for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 		MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
@@ -148,14 +162,18 @@ void UIProcessClock(UIPanel* self)
 
 		/* check if touch point is on "===> EDIT" */
 		if(slot->x >= pos_x && slot->x <= (pos_x + width) &&
-				slot->y <= GXGetFontHeight(&mcs->deface, size)) {
+				slot->y <= GXGetFontHeight(deface, size)) {
 			clk->editing = !clk->editing;
+		}
+
+		if(slot->x >= gear_x && slot->x <= (gear_x + size) &&
+				slot->y >= gear_y && slot->y <= (gear_y + size)) {
+			UICreateDesktop(UIGet(self));
 		}
 	}
 
 	if(clk->editing) {
-		UIProcessClockAlarm(self,
-				GXGetFontHeight(&mcs->deface, size));
+		UIProcessClockAlarm(self, GXGetFontHeight(deface, size));
 	}
 }
 
@@ -164,6 +182,7 @@ static void UIDrawClockTime(UIPanel* self, struct tm* tm)
 	char buf[32];
 	MCS* mcs = UIGetMCS(self);
 	MCSClock* clk = &mcs->clock;
+	GXFont* deface = &UIGet(self)->deface;
 
 	BOOL is_red = FALSE;
 	if(clk->triggered) {
@@ -175,12 +194,11 @@ static void UIDrawClockTime(UIPanel* self, struct tm* tm)
 	const float* color = is_red ? color_red : color_white;
 
 	sprintf(buf, "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
-	float width = GXGetTextWidthAlt(&mcs->deface,
-			mcs->deface.font->height, buf);
-	float size = mcs->width / width * mcs->deface.font->height;
-	float height = GXGetFontHeight(&mcs->deface, size);
+	float width = GXGetTextWidthAlt(deface, deface->font->height, buf);
+	float size = mcs->width / width * deface->font->height;
+	float height = GXGetFontHeight(deface, size);
 	float time_y = (mcs->height - height) / 2.0;
-	GXDrawTextAlt(&mcs->deface, 0, time_y, size, color, buf);
+	GXDrawTextAlt(deface, 0, time_y, size, color, buf);
 }
 
 static void UIDrawClockAlarm(UIPanel* self)
@@ -188,41 +206,38 @@ static void UIDrawClockAlarm(UIPanel* self)
 	char buf[32];
 	MCS* mcs = UIGetMCS(self);
 	MCSClock* clk = &mcs->clock;
+	GXFont* deface = &UIGet(self)->deface;
 
-	float width = GXGetTextWidth(&mcs->deface, 192.0, "DIS  ENA") +
-		GXGetTextWidthAlt(&mcs->deface, 192.0, "00:00");
+	float width = GXGetTextWidth(deface, 192.0, "DIS  ENA") +
+		GXGetTextWidthAlt(deface, 192.0, "00:00");
 	float size = (float) mcs->width / width * 192.0;
-	float height = GXGetFontHeight(&mcs->deface, size);
+	float height = GXGetFontHeight(deface, size);
 	float pos_y = (mcs->height - height) / 2.0;
 
 	float pos_x = 0;
-	GXDrawText(&mcs->deface, pos_x, pos_y, size, color_red, "DIS");
-	pos_x += GXGetTextWidth(&mcs->deface, size, "DIS ");
+	GXDrawText(deface, pos_x, pos_y, size, color_red, "DIS");
+	pos_x += GXGetTextWidth(deface, size, "DIS ");
 
 	float alarm_x_h = pos_x;
 	float alarm_x_m = alarm_x_h +
-		GXGetTextWidthAlt(&mcs->deface, size, "00:");
+		GXGetTextWidthAlt(deface, size, "00:");
 
 	sprintf(buf, "%02d:%02d", clk->alarm.hour, clk->alarm.minute);
-	GXDrawTextAlt(&mcs->deface, pos_x, pos_y, size, color_white, buf);
-	pos_x += GXGetTextWidthAlt(&mcs->deface, size, buf);
-	pos_x += GXGetTextWidth(&mcs->deface, size, " ");
+	GXDrawTextAlt(deface, pos_x, pos_y, size, color_white, buf);
+	pos_x += GXGetTextWidthAlt(deface, size, buf);
+	pos_x += GXGetTextWidth(deface, size, " ");
 
-	GXDrawText(&mcs->deface, pos_x, pos_y, size, color_green, "ENA");
+	GXDrawText(deface, pos_x, pos_y, size, color_green, "ENA");
 
-	float offset = GXGetFontHeight(&mcs->deface, size) * 0.75;
+	float offset = GXGetFontHeight(deface, size) * 0.75;
 	float button_inc = pos_y - offset;
 	float button_dec = pos_y + offset;
 
-	GXDrawTextAlt(&mcs->deface, alarm_x_h, button_inc, size, color_red,
-			"++");
-	GXDrawTextAlt(&mcs->deface, alarm_x_m, button_inc, size, color_red,
-			"++");
+	GXDrawTextAlt(deface, alarm_x_h, button_inc, size, color_red, "++");
+	GXDrawTextAlt(deface, alarm_x_m, button_inc, size, color_red, "++");
 
-	GXDrawTextAlt(&mcs->deface, alarm_x_h, button_dec, size, color_red,
-			"--");
-	GXDrawTextAlt(&mcs->deface, alarm_x_m, button_dec, size, color_red,
-			"--");
+	GXDrawTextAlt(deface, alarm_x_h, button_dec, size, color_red, "--");
+	GXDrawTextAlt(deface, alarm_x_m, button_dec, size, color_red, "--");
 }
 
 void UIDrawClock(UIPanel* self)
@@ -231,6 +246,7 @@ void UIDrawClock(UIPanel* self)
 
 	MCS* mcs = UIGetMCS(self);
 	MCSClock* clk = &mcs->clock;
+	GXFont* deface = &UIGet(self)->deface;
 
 	time_t t;
 	time(&t);
@@ -247,30 +263,29 @@ void UIDrawClock(UIPanel* self)
 	sprintf(buf, "%02d.%02d.%04d", tm.tm_mday, tm.tm_mon + 1,
 			tm.tm_year + 1900);
 
-	float width = GXGetTextWidth(&mcs->deface, 192.0,
-			"ALRM  ===> EDIT ")
-		+ GXGetTextWidthAlt(&mcs->deface, 192.0, "00:0000.00.0000");
+	float width = GXGetTextWidth(deface, 192.0, "ALRM  ===> EDIT ")
+		+ GXGetTextWidthAlt(deface, 192.0, "00:0000.00.0000");
 	float size = (float) mcs->width / width * 192.0;
-	width = GXGetTextWidthAlt(&mcs->deface, size, buf);
+	width = GXGetTextWidthAlt(deface, size, buf);
 	float date_x = mcs->width - width;
-	GXDrawTextAlt(&mcs->deface, date_x, 0, size, color_white, buf);
+	GXDrawTextAlt(deface, date_x, 0, size, color_white, buf);
 
 	/* alarm */
 	const float* alarm_color = clk->enabled ? color_green : color_gray;
 	sprintf(buf, "%02d:%02d", clk->alarm.hour, clk->alarm.minute);
-	float pos_x = GXGetTextWidth(&mcs->deface, size, "ALRM ");
-	GXDrawText(&mcs->deface, 0, 0, size, alarm_color, "ALRM");
-	GXDrawTextAlt(&mcs->deface, pos_x, 0, size, alarm_color, buf);
-	pos_x += GXGetTextWidthAlt(&mcs->deface, size, buf);
-	pos_x += GXGetTextWidth(&mcs->deface, size, " ");
+	float pos_x = GXGetTextWidth(deface, size, "ALRM ");
+	GXDrawText(deface, 0, 0, size, alarm_color, "ALRM");
+	GXDrawTextAlt(deface, pos_x, 0, size, alarm_color, buf);
+	pos_x += GXGetTextWidthAlt(deface, size, buf);
+	pos_x += GXGetTextWidth(deface, size, " ");
 
 	const float* edit_color = clk->editing ? color_red : color_green;
-	GXDrawText(&mcs->deface, pos_x, 0, size, edit_color, "===> EDIT");
+	GXDrawText(deface, pos_x, 0, size, edit_color, "===> EDIT");
 
 	/* weekday */
 	float weekday_x = 10;
-	float weekday_y = mcs->height - GXGetFontHeight(&mcs->deface, size);
-	GXDrawText(&mcs->deface, weekday_x, weekday_y, size, color_white,
+	float weekday_y = mcs->height - GXGetFontHeight(deface, size);
+	GXDrawText(deface, weekday_x, weekday_y, size, color_white,
 			weekdays[tm.tm_wday]);
 
 	/* remaining time */
@@ -281,15 +296,24 @@ void UIDrawClock(UIPanel* self)
 	int hours = dt / 60;
 
 	sprintf(buf, "%02d:%02d:%02d", hours, minutes, seconds);
-	width = GXGetTextWidthAlt(&mcs->deface, size, buf);
+	width = GXGetTextWidthAlt(deface, size, buf);
 	float center_x = (mcs->width - width / 2.0) / 2.0;
-	GXDrawTextAlt(&mcs->deface, center_x, weekday_y, size, color_gray,
-			buf);
+	GXDrawTextAlt(deface, center_x, weekday_y, size, color_gray, buf);
+
+	/* render gear icon */
+	const float pos_size[4] = {
+		mcs->width - size, mcs->height - size,
+		size, size
+	};
+	glActiveTexture(GL_TEXTURE0);
+	GXUseTexture(&gear_texture);
+	GXRenderTexQuad(pos_size, color_gray, TRUE);
+
 }
 
 static UIPanelDefinition clock_dlg = {
 	.init = UIInitClock,
-	.destroy = NULL,
+	.destroy = UIDestroyClock,
 	.process = UIProcessClock,
 	.draw = UIDrawClock
 };

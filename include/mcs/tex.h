@@ -22,4 +22,14 @@ void	GXCreateTexture(GXTexture* tex, const TXTR* data);
 void	GXDestroyTexture(GXTexture* tex);
 void	GXUseTexture(GXTexture* tex);
 
+static inline int GXGetTextureWidth(GXTexture* tex)
+{
+	return tex->width;
+}
+
+static inline int GXGetTextureHeight(GXTexture* tex)
+{
+	return tex->height;
+}
+
 #endif

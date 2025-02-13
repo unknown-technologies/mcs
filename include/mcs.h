@@ -10,6 +10,7 @@
 #include <mcs/dsp.h>
 #include <mcs/ai.h>
 #include <mcs/snd.h>
+#include <mcs/cal.h>
 #include <time.h>
 
 typedef struct MCS MCS;
@@ -35,7 +36,6 @@ struct MCS {
 	int		width;
 	int		height;
 	MT		mt;
-	GXFont		deface;
 	UI		ui;
 	MCSClock	clock;
 };

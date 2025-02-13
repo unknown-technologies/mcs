@@ -37,6 +37,7 @@ void	GXInitFont(void);
 BOOL	GXCreateFont(GXFont* font, const char* fontfile);
 void	GXDestroyFont(GXFont* font);
 float	GXGetFontHeight(GXFont* font, float size);
+float	GXGetFontLineHeight(GXFont* font, float size);
 float	GXGetTextWidth(GXFont* font, float size, const char* text);
 float	GXGetTextWidthAlt(GXFont* font, float size, const char* text);
 void	GXDrawText(GXFont* font, float x, float y, float scale,

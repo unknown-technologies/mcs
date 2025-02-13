@@ -5,8 +5,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-extern const char defacev1[];
-
 static unsigned long get_time(void)
 {
 	struct timespec t;
@@ -22,6 +20,7 @@ void MCSInit(MCS* mcs, int width, int height)
 	mcs->height = height;
 
 	GXInit();
+	GXSetView(0, 0, width, height);
 
 	MTInit(&mcs->mt);
 
@@ -29,8 +28,6 @@ void MCSInit(MCS* mcs, int width, int height)
 		printf("Failed to initialize sound system\n");
 		exit(1);
 	}
-
-	GXCreateFont(&mcs->deface, defacev1);
 
 	UIInit(&mcs->ui, mcs);
 	UICreateClock(&mcs->ui);
@@ -42,9 +39,8 @@ void MCSInit(MCS* mcs, int width, int height)
 
 void MCSFree(MCS* mcs)
 {
-	GXDestroyFont(&mcs->deface);
-
 	AIDestroy();
+	UIDestroy(&mcs->ui);
 	MTClose(&mcs->mt);
 }
 

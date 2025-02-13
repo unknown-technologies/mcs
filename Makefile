@@ -16,16 +16,21 @@ INCLUDES	:=	include
 SOURCES		:=	src
 GLSLSOURCES	:=	glsl
 FONTSOURCES	:=	fonts
+TXTRSOURCES	:=	textures
 DSPSOURCES	:=	dsp
 BUILD		:=	build
 
-ASAN		:=	#-fsanitize=address
+ASAN		:=	-fsanitize=address
 
 CFLAGS		:=	-O3 -g -Wall -std=c99 \
 			-ffunction-sections -fdata-sections \
 			$(INCLUDE) -DUNIX \
 			-D_XOPEN_SOURCE=500 -D_DEFAULT_SOURCE \
 			-DGL_GLEXT_PROTOTYPES \
+			-DREVISION=\"$(REVISION)\" \
+			-DCOMMIT=\"$(COMMIT)\" \
+			-DBUILDDATE=\"$(BUILDDATE)\" \
+			-DBUILDTIME=\"$(BUILDTIME)\" \
 			$(ASAN)
 
 LDFLAGS		:=	-Wl,-x -Wl,--gc-sections $(ASAN)
@@ -34,6 +39,7 @@ LIBS		:=	-lm -ldrm -lgbm -lEGL -lGLESv2 -lasound -pthread
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 GLSLFILES	:=	$(foreach dir,$(GLSLSOURCES),$(notdir $(wildcard $(dir)/*.glsl)))
 FONTFILES	:=	$(foreach dir,$(FONTSOURCES),$(notdir $(wildcard $(dir)/*.fnt)))
+TXTRFILES	:=	$(foreach dir,$(TXTRSOURCES),$(notdir $(wildcard $(dir)/*.tex)))
 DSPFILES	:=	$(foreach dir,$(DSPSOURCES),$(notdir $(wildcard $(dir)/*.dsp)))
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
@@ -42,16 +48,23 @@ export	DEPSDIR	:=	$(CURDIR)/$(BUILD)
 export	OFILES	:=	$(CFILES:.c=.o) \
 			$(GLSLFILES:.glsl=.o) \
 			$(FONTFILES:.fnt=.o) \
+			$(TXTRFILES:.tex=.o) \
 			$(DSPFILES:.dsp=.o)
 export	VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(GLSLSOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(FONTSOURCES),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(TXTRSOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(DSPSOURCES),$(CURDIR)/$(dir)) \
 			$(CURDIR)
 export	INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 				-I$(CURDIR)/$(BUILD) \
 				-I/usr/include/libdrm
 export	OUTPUT	:=	$(CURDIR)/$(TARGET)
+
+export	REVISION :=	$(shell git rev-list --count HEAD)
+export	COMMIT   :=	$(shell git rev-parse --short HEAD)
+export	BUILDDATE:=	$(shell date -u +"%Y-%m-%d")
+export	BUILDTIME:=	$(shell date -u +"%H:%M:%S")
 
 .PHONY: $(BUILD) clean all
 
@@ -86,11 +99,15 @@ all: $(TARGET)
 
 %.o: %.fnt
 	@echo "[FONT]  $(notdir $@)"
-	@$(BIN2O) -t -l$(subst -,_,$(subst .,_,$(basename $@))) -i$< -o$@
+	@$(BIN2O) -t -lFNT_$(subst -,_,$(subst .,_,$(basename $@))) -i$< -o$@
+
+%.o: %.tex
+	@echo "[TXTR]  $(notdir $@)"
+	@$(BIN2O) -t -lTEX_$(subst -,_,$(subst .,_,$(basename $@))) -i$< -o$@
 
 %.o: %.dsp
 	@echo "[DSP]   $(notdir $@)"
-	@$(BIN2O) -t -l$(subst .,_,$(basename $@)) -i$< -o$@
+	@$(BIN2O) -t -lDSP_$(subst .,_,$(basename $@)) -i$< -o$@
 
 $(TARGET): $(OFILES)
 	@echo "[LD]    $(notdir $@)"

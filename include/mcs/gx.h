@@ -8,7 +8,13 @@
 #endif
 
 void	GXInit(void);
+void	GXSetView(int x, int y, int width, int height);
+int	GXGetWidth(void);
+int	GXGetHeight(void);
+
 void	GXRenderQuad(void);
+void	GXRenderTexQuad(const float pos_size[4], const float color[4],
+		BOOL sdf);
 
 void	GXCheckError(const char* filename, unsigned int line);
 
