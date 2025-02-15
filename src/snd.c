@@ -32,6 +32,7 @@ void SNDStopAlarm(void)
 
 static void SNDiFillBuffer(s16* buffer, unsigned int samples)
 {
+	/* alarm handling */
 	if(play_alarm && !last_play_alarm) {
 		DSPInit(&alarm_l, DSP_alarmL);
 		DSPInit(&alarm_r, DSP_alarmR);
@@ -40,6 +41,8 @@ static void SNDiFillBuffer(s16* buffer, unsigned int samples)
 	last_play_alarm = play_alarm;
 
 	if(play_alarm) {
+		/* NOTE: alarm MUST NOT be a one-shot, otherwise there might
+		 * be stale samples in the buffer when the sound ends. */
 		DSPDecode(&alarm_l, buffer, samples, 2);
 		DSPDecode(&alarm_r, buffer + 1, samples, 2);
 	} else {
