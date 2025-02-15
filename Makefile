@@ -22,7 +22,7 @@ BUILD		:=	build
 
 ASAN		:=	-fsanitize=address
 
-CFLAGS		:=	-O3 -g -Wall -std=c99 \
+CFLAGS		:=	-O3 -g -Wall -std=c99 -pipe \
 			-ffunction-sections -fdata-sections \
 			$(INCLUDE) -DUNIX \
 			-D_XOPEN_SOURCE=500 -D_DEFAULT_SOURCE \
