@@ -48,6 +48,7 @@ BOOL AIInit(void (*callback)(s16*, unsigned int))
 	if(err) {
 		printf("Failed to create audio thread: %s\n",
 				strerror(err));
+		quit_ack = TRUE;
 		AIDestroy();
 		return FALSE;
 	}
