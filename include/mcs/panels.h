@@ -8,5 +8,8 @@ void	UICreateDesktop(UI* ui);
 void	UICreateSysinfo(UI* ui);
 void	UICreateTimer(UI* ui);
 void	UICreateCalendar(UI* ui);
+void	UICreateMusic(UI* ui);
+void	UICreateNews(UI* ui);
+void	UICreateSettings(UI* ui);
 
 #endif
