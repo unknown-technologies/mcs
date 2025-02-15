@@ -14,7 +14,7 @@ const float color_yellow[4] = { 1.0, 1.0, 0.0, 1.0 };
 const float color_pink[4]   = { 1.0, 0.0, 1.0, 1.0 };
 const float color_orange[4] = { 1.0, 0.5, 0.0, 1.0 };
 
-extern const char FNT_defacev1[];
+extern const char FNT_deface[];
 
 void UIInit(UI* ui, MCS* mcs)
 {
@@ -28,7 +28,7 @@ void UIInit(UI* ui, MCS* mcs)
 
 	GXFont* deface = &ui->deface;
 
-	GXCreateFont(deface, FNT_defacev1);
+	GXCreateFont(deface, FNT_deface);
 
 	float width = GXGetTextWidth(deface, 192.0, "ALRM  ===> EDIT ")
 		+ GXGetTextWidthAlt(deface, 192.0, "00:0000.00.0000");
