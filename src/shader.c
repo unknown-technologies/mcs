@@ -104,7 +104,7 @@ BOOL GXCreateShader(GXShader* shader, const char* vs_src, const char* fs_src)
 
 void GXDestroyShader(GXShader* shader)
 {
-	glDeleteShader(*shader);
+	glDeleteProgram(*shader);
 }
 
 GXUniform GXGetShaderUniform(GXShader* shader, const char* name)
