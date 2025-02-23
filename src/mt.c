@@ -163,7 +163,8 @@ BOOL MTInit(MT* mt)
 				memset(name, 0, sizeof(name));
 				char* start = strstr(buf, "Name=");
 				if(start) {
-					memcpy(name, start + 6, strlen(start + 6));
+					memcpy(name, start + 6,
+							strlen(start + 6));
 					char* c = strchr(name, '"');
 					if(c) {
 						*c = 0;
@@ -177,7 +178,8 @@ BOOL MTInit(MT* mt)
 			case 'B':
 				if(strstr(buf, "ABS=")) {
 					/* found it */
-					char* event = strstr(handler, "event");
+					char* event = strstr(handler,
+							"event");
 					if(event) {
 						char* c = strchr(event, ' ');
 						if(c) {
@@ -188,7 +190,9 @@ BOOL MTInit(MT* mt)
 								*c = 0;
 							}
 						}
-						snprintf(dev, sizeof(dev), "/dev/input/%s", event);
+						snprintf(dev, sizeof(dev),
+								"/dev/input/%s",
+								event);
 						goto found;
 					}
 				}
@@ -316,39 +320,43 @@ void MTProcess(MT* mt, struct input_event* event)
 			case ABS_MT_TRACKING_ID:
 				if(mt->slot) {
 					mt->slot->new_id = event->value;
-					mt->slot->new_active = event->value != -1;
+					mt->slot->new_active =
+						event->value != -1;
 				}
 				break;
 			case ABS_MT_POSITION_X:
 				if(mt->slot) {
-					mt->slot->new_x = event->value - mt->axis_x_min;
+					mt->slot->new_x = event->value -
+						mt->axis_x_min;
 				}
 				break;
 			case ABS_MT_POSITION_Y:
 				if(mt->slot) {
-					mt->slot->new_y = event->value - mt->axis_y_min;
+					mt->slot->new_y = event->value -
+						mt->axis_y_min;
 				}
 				break;
 		}
 	} else if(event->type == EV_SYN) {
-		if(mt->slot) {
-			if(mt->slot->id != mt->slot->new_id || mt->slot->active != mt->slot->new_active) {
+		/* update ALL slots here */
+		for(unsigned int i = 0; i < mt->slot_cnt; i++) {
+			MT_SLOT* slot = &mt->slots[i];
+			if(slot->id != slot->new_id ||
+					slot->active != slot->new_active) {
 				/* a fresh contact point */
-				mt->slot->fresh = TRUE;
-				mt->slot->dx = 0;
-				mt->slot->dy = 0;
+				slot->fresh = TRUE;
+				slot->dx = 0;
+				slot->dy = 0;
 			} else {
 				/* an existing contact point */
-				mt->slot->dx = mt->slot->new_x -
-					mt->slot->x;
-				mt->slot->dy = mt->slot->new_y -
-					mt->slot->y;
+				slot->dx = slot->new_x - slot->x;
+				slot->dy = slot->new_y - slot->y;
 			}
 
-			mt->slot->id = mt->slot->new_id;
-			mt->slot->active = mt->slot->new_active;
-			mt->slot->x = mt->slot->new_x;
-			mt->slot->y = mt->slot->new_y;
+			slot->id = slot->new_id;
+			slot->active = slot->new_active;
+			slot->x = slot->new_x;
+			slot->y = slot->new_y;
 		}
 	}
 }
