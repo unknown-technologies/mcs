@@ -6,13 +6,18 @@
 
 #include <mcs.h>
 
-const float color_white[4]  = { 1.0, 1.0, 1.0, 1.0 };
-const float color_gray[4]   = { 0.5, 0.5, 0.5, 1.0 };
-const float color_red[4]    = { 1.0, 0.0, 0.0, 1.0 };
-const float color_green[4]  = { 0.0, 1.0, 0.0, 1.0 };
-const float color_yellow[4] = { 1.0, 1.0, 0.0, 1.0 };
-const float color_pink[4]   = { 1.0, 0.0, 1.0, 1.0 };
-const float color_orange[4] = { 1.0, 0.5, 0.0, 1.0 };
+const float color_white[4]       = { 1.00, 1.00, 1.00, 1.00 };
+const float color_gray[4]        = { 0.50, 0.50, 0.50, 1.00 };
+const float color_red[4]         = { 1.00, 0.00, 0.00, 1.00 };
+const float color_green[4]       = { 0.00, 1.00, 0.00, 1.00 };
+const float color_yellow[4]      = { 1.00, 1.00, 0.00, 1.00 };
+const float color_pink[4]        = { 1.00, 0.00, 1.00, 1.00 };
+const float color_orange[4]      = { 1.00, 0.50, 0.00, 1.00 };
+const float color_blue[4]        = { 0.00, 0.00, 1.00, 1.00 };
+const float color_cyan[4]        = { 0.00, 1.00, 1.00, 1.00 };
+const float color_blue_dark0[4]  = { 0.00, 0.06, 0.12, 1.00 };
+const float color_blue_dark1[4]  = { 0.00, 0.25, 0.50, 1.00 };
+const float color_blue_bright[4] = { 0.00, 0.50, 1.00, 1.00 };
 
 extern const char FNT_deface[];
 
@@ -135,6 +140,13 @@ void UIProcess(UI* ui)
 		float size = ui->status_size;
 		float pos_y = GXGetFontHeight(deface, size);
 		float pos_x = GXGetTextWidthAlt(deface, size, "00:00:00");
+		float touch_x = pos_x;
+		if(panel->title) {
+			char buf[64];
+			sprintf(buf, "[%s]", panel->title);
+			float width = GXGetTextWidth(deface, size, buf);
+			touch_x = ui->width - width;
+		}
 
 		for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 			MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
@@ -142,7 +154,7 @@ void UIProcess(UI* ui)
 				continue;
 			}
 
-			if(slot->x >= pos_x && slot->y <= pos_y) {
+			if(slot->x >= touch_x && slot->y <= pos_y) {
 				UIDestroyPanel(panel);
 				UICleanup(ui);
 				return;

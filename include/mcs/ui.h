@@ -46,6 +46,11 @@ extern const float color_green[4];
 extern const float color_yellow[4];
 extern const float color_pink[4];
 extern const float color_orange[4];
+extern const float color_blue[4];
+extern const float color_cyan[4];
+extern const float color_blue_dark0[4];
+extern const float color_blue_dark1[4];
+extern const float color_blue_bright[4];
 
 void	UIInit(UI* ui, MCS* mcs);
 void	UIDestroy(UI* ui);
