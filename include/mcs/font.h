@@ -40,9 +40,9 @@ float	GXGetFontHeight(GXFont* font, float size);
 float	GXGetFontLineHeight(GXFont* font, float size);
 float	GXGetTextWidth(GXFont* font, float size, const char* text);
 float	GXGetTextWidthAlt(GXFont* font, float size, const char* text);
-void	GXDrawText(GXFont* font, float x, float y, float scale,
+float	GXDrawText(GXFont* font, float x, float y, float scale,
 		const float color[4], const char* text);
-void	GXDrawTextAlt(GXFont* font, float x, float y, float scale,
+float	GXDrawTextAlt(GXFont* font, float x, float y, float scale,
 		const float color[4], const char* text);
 
 void	GXInitMicrofont(void);
@@ -52,7 +52,7 @@ void	GXDrawMicroText(unsigned int x, unsigned int y,
 /* internal subroutines */
 float	GXiGetTextWidth(GXFont* font, BOOL alt, float size,
 		const char* text);
-void	GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
+float	GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
 		const float color[4], const char* text);
 
 #endif

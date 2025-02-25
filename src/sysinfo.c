@@ -1,6 +1,13 @@
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
 #include <sys/sysinfo.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <netdb.h>
 
 #include <mcs.h>
 
@@ -20,27 +27,64 @@ static const char* about_text_2 = BUILDDATE "\n"
 	BUILDTIME "\n"
 	SOFTWARE_VERSION;
 
+typedef struct {
+	struct ifaddrs*	addrs;
+} Sysinfo;
+
 void UIInitSysinfo(UIPanel* self)
 {
+	Sysinfo* info = (Sysinfo*) malloc(sizeof(Sysinfo));
+	memset(info, 0, sizeof(Sysinfo));
+	UISetUserData(self, info);
+
 	UISetTitle(self, "System Info");
+
+	if(getifaddrs(&info->addrs)) {
+		printf("getifaddrs failed: %s\n", strerror(errno));
+	}
 }
+
+void UIDestroySysinfo(UIPanel* self)
+{
+	Sysinfo* info = (Sysinfo*) UIGetUserData(self);
+	if(info->addrs) {
+		freeifaddrs(info->addrs);
+	}
+	free(info);
+}
+
+#ifdef MCS_ALLOW_EXIT
+static void UIProcessSysinfoInput(UIPanel* self, MT_SLOT* slot, void* data)
+{
+	if(slot->fresh) {
+		MCS* mcs = UIGetMCS(self);
+		mcs->exit = TRUE;
+	}
+}
+
+void UIProcessSysinfo(UIPanel* self)
+{
+	UIProcessInput(self, UIProcessSysinfoInput, NULL);
+}
+#endif
 
 void UIDrawSysinfo(UIPanel* self)
 {
 	UI* ui = UIGet(self);
+	GXFont* deface = &ui->deface;
+	Sysinfo* this = (Sysinfo*) UIGetUserData(self);
 
 	float size = 32;
 	float pos_x = 0;
 	float pos_y = 0;
 
-	float width = GXGetTextWidth(&ui->deface, size, about_text_1);
+	float width = GXGetTextWidth(deface, size, about_text_1);
 
-	GXDrawText(&ui->deface, pos_x, pos_y, size, color_gray,
-			about_text_1);
-	GXDrawText(&ui->deface, pos_x + width, pos_y, size, color_gray,
+	GXDrawText(deface, pos_x, pos_y, size, color_gray, about_text_1);
+	GXDrawText(deface, pos_x + width, pos_y, size, color_gray,
 			about_text_2);
 
-	pos_y = GXGetFontLineHeight(&ui->deface, size) * 4;
+	pos_y = GXGetFontLineHeight(deface, size) * 4;
 
 	struct sysinfo info;
 	sysinfo(&info);
@@ -65,13 +109,54 @@ void UIDrawSysinfo(UIPanel* self)
 			info.loads[2] * load_scale,
 			get_nprocs(),
 			uptime_d, uptime_h, uptime_m, uptime_s);
-	GXDrawText(&ui->deface, pos_x + width, pos_y, size, color_gray, buf);
+	GXDrawText(deface, pos_x + width, pos_y, size, color_gray, buf);
+
+	pos_y += GXGetFontLineHeight(deface, size) * 6;
+
+	for(struct ifaddrs* ifa = this->addrs; ifa; ifa = ifa->ifa_next) {
+		/* no address => uninteresting for us */
+		if(!ifa->ifa_addr) {
+			continue;
+		}
+
+		/* loopback interface => uninteresting for us */
+		if(ifa->ifa_name && !strcmp(ifa->ifa_name, "lo")) {
+			continue;
+		}
+
+		/* we only care about IPv4/IPv6 */
+		int family = ifa->ifa_addr->sa_family;
+		if(family != AF_INET && family != AF_INET6) {
+			continue;
+		}
+
+		GXDrawText(deface, pos_x, pos_y, size, color_gray,
+				ifa->ifa_name);
+
+		const float* color = color_gray;
+		int err = getnameinfo(ifa->ifa_addr, (family == AF_INET) ?
+				sizeof(struct sockaddr_in) :
+				sizeof(struct sockaddr_in6), buf,
+				sizeof(buf), NULL, 0, NI_NUMERICHOST);
+		if(err) {
+			sprintf(buf, "getnameinfo(): %s",
+					gai_strerror(err));
+			color = color_orange;
+		}
+
+		GXDrawText(deface, pos_x + width, pos_y, size, color, buf);
+		pos_y += GXGetFontLineHeight(deface, size);
+	}
 }
 
 static UIPanelDefinition sysinfo_dlg = {
 	.init = UIInitSysinfo,
-	.destroy = NULL,
+	.destroy = UIDestroySysinfo,
+#ifdef MCS_ALLOW_EXIT
+	.process = UIProcessSysinfo,
+#else
 	.process = NULL,
+#endif
 	.draw = UIDrawSysinfo
 };
 

@@ -37,13 +37,21 @@ int main(void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	int maxtexsz;
+	int maxattribs;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxtexsz);
-	printf("Max texture size: %d\n", maxtexsz);
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxattribs);
+	printf("Max texture size:   %d\n", maxtexsz);
+	printf("Max vertex attribs: %d\n", maxattribs);
 
 	MCSInit(&mcs, drm->mode->hdisplay, drm->mode->vdisplay);
 
 	/* main loop */
-	while(1) {
+#ifdef MCS_ALLOW_EXIT
+#define	CONDITION	!mcs.exit
+#else
+#define	CONDITION	1
+#endif
+	while(CONDITION) {
 		egl_before(gbm, drm, &egl);
 		glClear(GL_COLOR_BUFFER_BIT);
 

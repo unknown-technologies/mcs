@@ -139,19 +139,19 @@ float GXiGetTextWidth(GXFont* font, BOOL alt, float size, const char* text)
 	return width;
 }
 
-void GXDrawText(GXFont* font, float x, float y, float size,
+float GXDrawText(GXFont* font, float x, float y, float size,
 		const float color[4], const char* text)
 {
-	GXiDrawText(font, FALSE, x, y, size, color, text);
+	return GXiDrawText(font, FALSE, x, y, size, color, text);
 }
 
-void GXDrawTextAlt(GXFont* font, float x, float y, float size,
+float GXDrawTextAlt(GXFont* font, float x, float y, float size,
 		const float color[4], const char* text)
 {
-	GXiDrawText(font, TRUE, x, y, size, color, text);
+	return GXiDrawText(font, TRUE, x, y, size, color, text);
 }
 
-void GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
+float GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
 		const float color[4], const char* text)
 {
 	FNT* fnt = font->font;
@@ -202,4 +202,6 @@ void GXiDrawText(GXFont* font, BOOL alt, float x, float y, float size,
 			px += glyph->adjust * scale;
 		}
 	}
+
+	return px;
 }

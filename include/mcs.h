@@ -1,6 +1,10 @@
 #ifndef __MCS_H__
 #define __MCS_H__
 
+#ifdef DEBUG
+#define	MCS_ALLOW_EXIT
+#endif
+
 #include <mcs/types.h>
 #include <mcs/shader.h>
 #include <mcs/gx.h>
@@ -11,6 +15,12 @@
 #include <mcs/ai.h>
 #include <mcs/snd.h>
 #include <mcs/cal.h>
+#include <mcs/os.h>
+#include <mcs/cfg.h>
+#include <mcs/kb.h>
+#include <mcs/cfg.h>
+#include <mcs/sha256.h>
+#include <mcs/aes256.h>
 #include <time.h>
 
 typedef struct MCS MCS;
@@ -38,6 +48,10 @@ struct MCS {
 	MT		mt;
 	UI		ui;
 	MCSClock	clock;
+	CFG		config;
+#ifdef MCS_ALLOW_EXIT
+	BOOL		exit;
+#endif
 };
 
 void	MCSInit(MCS* mcs, int width, int height);

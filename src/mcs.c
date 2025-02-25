@@ -29,6 +29,8 @@ void MCSInit(MCS* mcs, int width, int height)
 		exit(1);
 	}
 
+	CFGRead(&mcs->config);
+
 	UIInit(&mcs->ui, mcs);
 	UICreateClock(&mcs->ui);
 
@@ -42,6 +44,7 @@ void MCSFree(MCS* mcs)
 	AIDestroy();
 	UIDestroy(&mcs->ui);
 	MTClose(&mcs->mt);
+	CFGDestroy(&mcs->config);
 }
 
 static void ALRMProcess(MCSClock* clk)

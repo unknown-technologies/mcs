@@ -17,9 +17,6 @@ void UIInitClock(UIPanel* self)
 
 	GXCreateTexture(&gear_texture, (const TXTR*) TEX_gear);
 
-	setenv("TZ", "Europe/Vienna", 1);
-	tzset();
-
 	UISetFullscreen(self, TRUE);
 }
 
