@@ -18,6 +18,7 @@
 #include <mcs/os.h>
 #include <mcs/cfg.h>
 #include <mcs/kb.h>
+#include <mcs/light.h>
 #include <mcs/cfg.h>
 #include <mcs/sha256.h>
 #include <mcs/aes256.h>
@@ -26,6 +27,7 @@
 typedef struct MCS MCS;
 
 #include <mcs/ui.h>
+#include <mcs/widgets.h>
 #include <mcs/panels.h>
 
 typedef struct {
@@ -48,6 +50,7 @@ struct MCS {
 	MT		mt;
 	UI		ui;
 	MCSClock	clock;
+	DMX		dmx;
 	CFG		config;
 #ifdef MCS_ALLOW_EXIT
 	BOOL		exit;

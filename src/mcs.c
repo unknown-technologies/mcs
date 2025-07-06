@@ -30,6 +30,7 @@ void MCSInit(MCS* mcs, int width, int height)
 	}
 
 	CFGRead(&mcs->config);
+	DMXInit(&mcs->dmx);
 
 	UIInit(&mcs->ui, mcs);
 	UICreateClock(&mcs->ui);
@@ -42,6 +43,7 @@ void MCSInit(MCS* mcs, int width, int height)
 void MCSFree(MCS* mcs)
 {
 	AIDestroy();
+	DMXDestroy(&mcs->dmx);
 	UIDestroy(&mcs->ui);
 	MTClose(&mcs->mt);
 	CFGDestroy(&mcs->config);

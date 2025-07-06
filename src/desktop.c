@@ -46,7 +46,7 @@ static const TILE tile_definition[] = {
 	{ .name = "MUSIC",	.texture = &TEX_gear,
 		.sdf = TRUE,	.callback = UICreateMusic },
 	{ .name = "LIGHT",	.texture = &TEX_gear,
-		.sdf = TRUE,	.callback = NULL },
+		.sdf = TRUE,	.callback = UICreateLight },
 	{ .name = "NEWS",	.texture = &TEX_gear,
 		.sdf = TRUE,	.callback = UICreateNews },
 	{ .name = "TERMINAL",	.texture = &TEX_terminal,

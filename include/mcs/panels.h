@@ -10,6 +10,7 @@ void	UICreateTimer(UI* ui);
 void	UICreateCalendar(UI* ui);
 void	UICreateMusic(UI* ui);
 void	UICreateNews(UI* ui);
+void	UICreateLight(UI* ui);
 void	UICreateSettings(UI* ui);
 
 #endif
