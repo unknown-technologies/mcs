@@ -13,8 +13,7 @@
 
 #define	SOFTWARE_VERSION	"r" REVISION "~" COMMIT
 
-static const char* about_text_1 = "Build Date: \n"
-	"Build Time: \n"
+static const char* about_text_1 = "Build Time: \n"
 	"Version: \n"
 	"\n"
 	"Total memory: \n"
@@ -23,8 +22,7 @@ static const char* about_text_1 = "Build Date: \n"
 	"Cores: \n"
 	"Uptime: ";
 
-static const char* about_text_2 = BUILDDATE "\n"
-	BUILDTIME "\n"
+static const char* about_text_2 = BUILDDATE " " BUILDTIME "\n"
 	SOFTWARE_VERSION;
 
 typedef struct {
@@ -84,7 +82,7 @@ void UIDrawSysinfo(UIPanel* self)
 	GXDrawText(deface, pos_x + width, pos_y, size, color_gray,
 			about_text_2);
 
-	pos_y = GXGetFontLineHeight(deface, size) * 4;
+	pos_y = GXGetFontLineHeight(deface, size) * 3;
 
 	struct sysinfo info;
 	sysinfo(&info);
