@@ -1,4 +1,3 @@
-/* vim:set ts=8 sts=8 sw=8 tw=80 cc=80 noet: */
 #ifndef __KMS_H__
 #define __KMS_H__
 
@@ -16,7 +15,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#include "types.h"
+#include <mcs/types.h>
 
 #define NUM_BUFFERS 2
 
@@ -84,6 +83,9 @@ typedef struct {
 } DRM;
 
 typedef struct {
+	DRM*			drm;
+	const GBM*		gbm;
+
 	EGLDisplay		display;
 	EGLConfig		config;
 	EGLContext		context;
@@ -100,16 +102,16 @@ typedef struct {
 	EGLSyncKHR		kms_fence; /* in-fence to gpu, out-fence from kms */
 } EGL;
 
-DRM* init_drm(const char* device, const char* mode_str, unsigned int vrefresh);
-GBM* init_gbm(int drm_fd, int w, int h, u32 format, u64 modifier,
+DRM* DRMInit(const char* device, const char* mode_str, unsigned int vrefresh);
+GBM* GBMInit(int drm_fd, int w, int h, u32 format, u64 modifier,
 		bool surfaceless);
-int init_egl(EGL* egl, const GBM* gbm, int samples);
+int EGLInit(EGL* egl, DRM* drm, const GBM* gbm, int samples);
 
-void free_drm(DRM* drm);
-void free_gbm(GBM* gbm);
-void free_egl(EGL* egl, const GBM* gbm);
+void DRMDestroy(DRM* drm);
+void GBMDestroy(GBM* gbm);
+void EGLDestroy(EGL* egl);
 
-void egl_before(const GBM* gbm, DRM* drm, EGL* egl);
-void egl_done(const GBM* gbm, DRM* drm, EGL* egl);
+void EGLBegin(EGL* egl);
+bool EGLEnd(EGL* egl);
 
 #endif

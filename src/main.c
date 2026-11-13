@@ -11,13 +11,13 @@ int main(void)
 {
 	EGL egl;
 
-	DRM* drm = init_drm(NULL, NULL, 0);
+	DRM* drm = DRMInit(NULL, NULL, 0);
 	if(!drm) {
 		fprintf(stderr, "failed to initialize DRM\n");
 		return 1;
 	}
 
-	GBM* gbm = init_gbm(drm->fd, drm->mode->hdisplay,
+	GBM* gbm = GBMInit(drm->fd, drm->mode->hdisplay,
 			drm->mode->vdisplay, DRM_FORMAT_ARGB8888,
 			DRM_FORMAT_MOD_LINEAR, false);
 	if(!gbm) {
@@ -28,7 +28,7 @@ int main(void)
 	printf("Screen size: %dx%d\n", drm->mode->hdisplay,
 			drm->mode->vdisplay);
 
-	init_egl(&egl, gbm, 0);
+	EGLInit(&egl, drm, gbm, 0);
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -52,7 +52,7 @@ int main(void)
 #define	CONDITION	1
 #endif
 	while(CONDITION) {
-		egl_before(gbm, drm, &egl);
+		EGLBegin(&egl);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		/* process events */
@@ -61,12 +61,12 @@ int main(void)
 		/* render UI */
 		MCSRender(&mcs);
 
-		egl_done(gbm, drm, &egl);
+		EGLEnd(&egl);
 	}
 
 	MCSFree(&mcs);
 
-	free_egl(&egl, gbm);
-	free_gbm(gbm);
-	free_drm(drm);
+	EGLDestroy(&egl);
+	GBMDestroy(gbm);
+	DRMDestroy(drm);
 }

@@ -1,4 +1,3 @@
-/* vim:set ts=8 sts=8 sw=8 tw=80 cc=80 noet: */
 #include <assert.h>
 #include <errno.h>
 #include <poll.h>
@@ -92,8 +91,9 @@ static int drm_atomic_commit(DRM* drm, u32 fb_id, u32 flags)
 
 	ret = drmModeAtomicCommit(drm->fd, req, flags, NULL);
 
-	if(ret)
+	if(ret) {
 		goto out;
+	}
 
 	if(drm->kms_in_fence_fd != -1) {
 		close(drm->kms_in_fence_fd);
@@ -176,8 +176,9 @@ static u32 find_crtc_for_encoder(const drmModeRes* resources,
 		 */
 		const u32 crtc_mask = 1 << i;
 		const u32 crtc_id = resources->crtcs[i];
-		if(encoder->possible_crtcs & crtc_mask)
+		if(encoder->possible_crtcs & crtc_mask) {
 			return crtc_id;
+		}
 	}
 
 	/* no match found */
@@ -198,8 +199,9 @@ static u32 find_crtc_for_connector(const DRM* drm, const drmModeRes* resources,
 					encoder);
 
 			drmModeFreeEncoder(encoder);
-			if(crtc_id)
+			if(crtc_id != (u32) -1) {
 				return crtc_id;
+			}
 		}
 	}
 
@@ -210,8 +212,9 @@ static u32 find_crtc_for_connector(const DRM* drm, const drmModeRes* resources,
 static int get_resources(int fd, drmModeRes** resources)
 {
 	*resources = drmModeGetResources(fd);
-	if(!*resources)
+	if(!*resources) {
 		return -1;
+	}
 	return 0;
 }
 
@@ -233,19 +236,24 @@ static int find_drm_device(drmModeRes** resources)
 		drmDevicePtr device = devices[i];
 		int ret;
 
-		if(!(device->available_nodes & (1 << DRM_NODE_PRIMARY)))
+		if(!(device->available_nodes & (1 << DRM_NODE_PRIMARY))) {
 			continue;
+		}
 
 		/* OK, it's a primary device. If we can get the
 		 * drmModeResources, it means it's also a KMS-capable device.
 		 */
 		fd = open(device->nodes[DRM_NODE_PRIMARY], O_RDWR);
-		if(fd < 0)
+		if(fd < 0) {
 			continue;
+		}
 		ret = get_resources(fd, resources);
+#ifdef DEBUG
 		printf("using drm device %s\n", device->nodes[DRM_NODE_PRIMARY]);
-		if(!ret)
+#endif
+		if(!ret) {
 			break;
+		}
 		close(fd);
 		fd = -1;
 	}
@@ -258,7 +266,7 @@ static int find_drm_device(drmModeRes** resources)
 	return fd;
 }
 
-static int _init_drm(DRM* drm, const char* device, const char* mode_str,
+static int init_drm(DRM* drm, const char* device, const char* mode_str,
 		unsigned int vrefresh)
 {
 	drmModeRes* resources;
@@ -291,6 +299,11 @@ static int _init_drm(DRM* drm, const char* device, const char* mode_str,
 	for(i = 0; i < resources->count_connectors; i++) {
 		connector = drmModeGetConnector(drm->fd,
 				resources->connectors[i]);
+		if(connector == NULL) {
+			fprintf(stderr, "drmModeGetConnector failed: %s\n",
+					strerror(errno));
+			return -1;
+		}
 		if(connector->connection == DRM_MODE_CONNECTED) {
 			/* it's connected, let's use this! */
 			break;
@@ -349,8 +362,13 @@ static int _init_drm(DRM* drm, const char* device, const char* mode_str,
 	/* find encoder */
 	for(i = 0; i < resources->count_encoders; i++) {
 		encoder = drmModeGetEncoder(drm->fd, resources->encoders[i]);
-		if(encoder->encoder_id == connector->encoder_id)
+		if(!encoder) {
+			fprintf(stderr, "failed to get encoder!\n");
+			return -1;
+		}
+		if(encoder->encoder_id == connector->encoder_id) {
 			break;
+		}
 		drmModeFreeEncoder(encoder);
 		encoder = NULL;
 	}
@@ -359,7 +377,7 @@ static int _init_drm(DRM* drm, const char* device, const char* mode_str,
 		drm->crtc_id = encoder->crtc_id;
 	} else {
 		u32 crtc_id = find_crtc_for_connector(drm, resources, connector);
-		if(!crtc_id) {
+		if(crtc_id == (u32) -1) {
 			fprintf(stderr, "no crtc found!\n");
 			return -1;
 		}
@@ -384,20 +402,26 @@ static int _init_drm(DRM* drm, const char* device, const char* mode_str,
 	return 0;
 }
 
-DRM* init_drm(const char* device, const char* mode_str,
+/* TODO: properly clean up on error to avoid leaks */
+DRM* DRMInit(const char* device, const char* mode_str,
 		unsigned int vrefresh)
 {
 	u32 plane_id;
 	int ret;
 
 	DRM* drm = (DRM*) malloc(sizeof(DRM));
+	if(!drm) {
+		return NULL;
+	}
+
 	memset(drm, 0, sizeof(DRM));
 
 	drm->kms_out_fence_fd = -1;
 
-	ret = _init_drm(drm, device, mode_str, vrefresh);
-	if(ret)
+	ret = init_drm(drm, device, mode_str, vrefresh);
+	if(ret) {
 		return NULL;
+	}
 
 	ret = drmSetClientCap(drm->fd, DRM_CLIENT_CAP_ATOMIC, 1);
 	if(ret) {
@@ -421,6 +445,9 @@ DRM* init_drm(const char* device, const char* mode_str,
 	drm->plane = (Plane*) malloc(sizeof(Plane));
 	drm->crtc = (CRTC*) malloc(sizeof(CRTC));
 	drm->connector = (Connector*) malloc(sizeof(Connector));
+	if(!drm->plane || !drm->crtc || !drm->connector) {
+		return NULL;
+	}
 
 #define get_resource(type, Type, id) {					       \
 		drm->type->type = drmModeGet##Type(drm->fd, id);	       \
@@ -460,7 +487,7 @@ DRM* init_drm(const char* device, const char* mode_str,
 	return drm;
 }
 
-void free_drm(DRM* drm)
+void DRMDestroy(DRM* drm)
 {
 #define free_properties(type) {						       \
 		unsigned int i;						       \
@@ -488,8 +515,9 @@ void free_drm(DRM* drm)
 	free(drm->crtc);
 	free(drm->plane);
 
-	if(drm->fd >= 0)
+	if(drm->fd >= 0) {
 		close(drm->fd);
+	}
 
 	free(drm);
 }
@@ -500,13 +528,14 @@ drm_fb_destroy_callback(struct gbm_bo *bo, void *data)
 	int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
 	struct drm_fb *fb = data;
 
-	if(fb->fb_id)
+	if(fb->fb_id) {
 		drmModeRmFB(drm_fd, fb->fb_id);
+	}
 
 	free(fb);
 }
 
-static struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
+struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
 {
 	int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));	
 	struct drm_fb* fb = (struct drm_fb*) gbm_bo_get_user_data(bo);
@@ -521,8 +550,9 @@ static struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
 
 	int ret = -1;
 
-	if(fb)
+	if(fb) {
 		return fb;
+	}
 
 	fb = calloc(1, sizeof(struct drm_fb));
 	fb->bo = bo;
@@ -537,7 +567,10 @@ static struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
 		u64 modifiers[4] = { 0 };
 		modifiers[0] = gbm_bo_get_modifier(bo);
 		const int num_planes = gbm_bo_get_plane_count(bo);
-		assert(num_planes <= 4);
+		if(num_planes > 4) {
+			fprintf(stderr, "Too many planes: %d\n", num_planes);
+			return NULL;
+		}
 		for(int i = 0; i < num_planes; i++) {
 			handles[i] = gbm_bo_get_handle_for_plane(bo, i).u32;
 			strides[i] = gbm_bo_get_stride_for_plane(bo, i);
@@ -547,7 +580,9 @@ static struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
 
 		if(modifiers[0]) {
 			flags = DRM_MODE_FB_MODIFIERS;
+#ifdef DEBUG
 			printf("Using modifier %" PRIx64 "\n", modifiers[0]);
+#endif
 		}
 
 		ret = drmModeAddFB2WithModifiers(drm_fd, width, height, format,
@@ -556,8 +591,9 @@ static struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo)
 	}
 
 	if(ret) {
-		if(flags)
+		if(flags) {
 			printf("Modifiers failed!\n");
+		}
 
 		memset(handles, 0, sizeof(u32) * 4);
 		memset(strides, 0, sizeof(u32) * 4);
@@ -596,8 +632,11 @@ static EGLSyncKHR create_fence(const EGL* egl, int fd)
 	return fence;
 }
 
-void egl_before(const GBM* gbm, DRM* drm, EGL* egl)
+void EGLBegin(EGL* egl)
 {
+	const GBM* gbm = egl->gbm;
+	DRM* drm= egl->drm;
+
 	if(drm->kms_out_fence_fd != -1) {
 		egl->kms_fence = create_fence(egl, drm->kms_out_fence_fd);
 		assert(egl->kms_fence);
@@ -613,15 +652,18 @@ void egl_before(const GBM* gbm, DRM* drm, EGL* egl)
 		eglWaitSyncKHR(egl->display, egl->kms_fence, 0);
 	}
 
-	if(!gbm->surface)
+	if(!gbm->surface) {
 		glBindFramebuffer(GL_FRAMEBUFFER, egl->fbs[egl->fb].fb);
+	}
 }
 
-void egl_done(const GBM* gbm, DRM* drm, EGL* egl)
+bool EGLEnd(EGL* egl)
 {
 	int result;
 	struct gbm_bo* next_bo;
 	struct drm_fb* fb;
+	const GBM* gbm = egl->gbm;
+	DRM* drm= egl->drm;
 	EGLSyncKHR gpu_fence = NULL; /* out-fence from gpu, in-fence to kms */
 
 	/* insert fence to be singled in cmdstream, this fence will be signaled
@@ -630,8 +672,9 @@ void egl_done(const GBM* gbm, DRM* drm, EGL* egl)
 	gpu_fence = create_fence(egl, EGL_NO_NATIVE_FENCE_FD_ANDROID);
 	assert(gpu_fence);
 
-	if(gbm->surface)
+	if(gbm->surface) {
 		eglSwapBuffers(egl->display, egl->surface);
+	}
 
 	/* after swapbuffers, gpu_fence should be flushed, so safe to get fd */
 	drm->kms_in_fence_fd = eglDupNativeFenceFDANDROID(egl->display, gpu_fence);
@@ -646,13 +689,13 @@ void egl_done(const GBM* gbm, DRM* drm, EGL* egl)
 
 	if(!next_bo) {
 		printf("Failed to lock frontbuffer\n");
-		return;
+		return false;
 	}
 
 	fb = drm_fb_get_from_bo(next_bo);
 	if(!fb) {
 		printf("Failed to get a new framebuffer BO\n");
-		return;
+		return false;
 	}
 
 	if(egl->kms_fence) {
@@ -677,12 +720,13 @@ void egl_done(const GBM* gbm, DRM* drm, EGL* egl)
 	result = drm_atomic_commit(drm, fb->fb_id, egl->flags);
 	if(result) {
 		printf("Failed to commit: %s\n", strerror(errno));
-		return;
+		return false;
 	}
 
 	/* release last buffer to render on again */
-	if(egl->bo && gbm->surface)
+	if(egl->bo && gbm->surface) {
 		gbm_surface_release_buffer(gbm->surface, egl->bo);
+	}
 
 	egl->bo = next_bo;
 
@@ -690,4 +734,6 @@ void egl_done(const GBM* gbm, DRM* drm, EGL* egl)
 	egl->flags &= ~DRM_MODE_ATOMIC_ALLOW_MODESET;
 
 	egl->fb = (egl->fb + 1) % NUM_BUFFERS;
+
+	return true;
 }
