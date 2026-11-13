@@ -20,9 +20,24 @@ TXTRSOURCES	:=	textures
 DSPSOURCES	:=	dsp
 BUILD		:=	build
 
-ASAN		:=	-fsanitize=address
+OPT		:=	-O3 -g
 
-CFLAGS		:=	-O3 -g -Wall -std=c99 -pipe \
+ifdef NDEBUG
+DEBUG		:=	-DNDEBUG
+ASAN		:=	0
+else
+DEBUG		:=	-DDEBUG
+ASAN		:=	1
+endif
+
+ifeq ($(ASAN),1)
+ASANFLG		:=	-fsanitize=address
+else
+ASANFLG		:=
+endif
+
+CFLAGS		+=	$(OPT) -Wall -Wextra -Wformat -Werror=format-security \
+			-std=gnu99 \
 			-ffunction-sections -fdata-sections \
 			$(INCLUDE) -DUNIX \
 			-D_XOPEN_SOURCE=500 -D_DEFAULT_SOURCE \
@@ -31,9 +46,10 @@ CFLAGS		:=	-O3 -g -Wall -std=c99 -pipe \
 			-DCOMMIT=\"$(COMMIT)\" \
 			-DBUILDDATE=\"$(BUILDDATE)\" \
 			-DBUILDTIME=\"$(BUILDTIME)\" \
-			$(ASAN)
+			-pipe \
+			$(DEBUG) $(ASANFLG)
 
-LDFLAGS		:=	-Wl,-x -Wl,--gc-sections $(ASAN)
+LDFLAGS		+=	-Wl,-x -Wl,--gc-sections $(OPT) $(ASANFLG)
 LIBS		:=	-lm -ldrm -lgbm -lEGL -lGLESv2 -lasound -pthread
 
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
