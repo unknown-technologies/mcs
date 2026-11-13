@@ -59,7 +59,7 @@ static void UIProcessClockAlarm(UIPanel* self, float ignore_y)
 
 	float button_end = mcs->height / 2.0;
 
-	for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
+	for(int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 		MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
 		if(!slot || !slot->active) {
 			continue;
@@ -151,7 +151,7 @@ void UIProcessClock(UIPanel* self)
 	float gear_x = mcs->width - size;
 	float gear_y = mcs->height - size;
 
-	for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
+	for(int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 		MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
 		if(!slot || !slot->active || !slot->fresh) {
 			continue;

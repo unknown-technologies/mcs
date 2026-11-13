@@ -98,6 +98,8 @@ void UIDestroySettings(UIPanel* self)
 static void UIProcessSettingsInput(UIPanel* self, MT_SLOT* slot,
 		void* attachment)
 {
+	(void) attachment;
+
 	Settings* settings = (Settings*) UIGetUserData(self);
 
 	if(slot->fresh && slot->x >= settings->field_x) {

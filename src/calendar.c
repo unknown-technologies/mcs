@@ -98,12 +98,12 @@ void UIDrawCalendar(UIPanel* self)
 
 	/* table */
 	int wday = CALGetWeekday(tm.tm_year + 1900, tm.tm_mon + 1, 1);
-	unsigned int days = CALGetDaysOfMonth(tm.tm_year + 1900,
+	int days = CALGetDaysOfMonth(tm.tm_year + 1900,
 			tm.tm_mon + 1);
 	pos_x = cal->pos_x + (cal->cellwidth + cal->space) * wday;
 	float pos_y = 2 * height;
-	unsigned int day = wday;
-	for(unsigned int i = 0; i < days; i++) {
+	int day = wday;
+	for(int i = 0; i < days; i++) {
 		sprintf(buf, "%02d", i + 1);
 
 		float width = GXGetTextWidthAlt(deface, cal->size, buf);

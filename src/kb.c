@@ -620,6 +620,8 @@ static KBVTX* KBCreateKey(KBVTX* vtx, GXFont* font, float fontscale,
 void KBInit(KB* kb, GXFont* font, const KBLayout* layout, int width,
 		int height)
 {
+	(void) height; /* TODO: do we need this anywhere? */
+
 	memset(kb, 0, sizeof(KB));
 	kb->font = &font->tex;
 	kb->layout = layout;
@@ -857,8 +859,8 @@ void KBProcess(KB* kb)
 void KBProcessInput(KB* kb, MT_SLOT* slot)
 {
 	float off_y = kb->top ? 0 : GXGetHeight() - kb->height;
-	int colid = (int) (slot->x / kb->cell_size);
-	int rowid = (int) ((slot->y - off_y) / kb->cell_size);
+	unsigned int colid = (unsigned int) (slot->x / kb->cell_size);
+	unsigned int rowid = (unsigned int) ((slot->y - off_y) / kb->cell_size);
 
 	/* ignore touch points outside of the keyboard area */
 	if(kb->top && slot->y > kb->height) {

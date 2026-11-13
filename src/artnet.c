@@ -21,5 +21,5 @@ BOOL ARTDMXSend(ArtDMX* dmx, int fd)
 {
 	size_t size = sizeof(ArtDMX) - 512 + U16B(dmx->paramcnt);
 	ssize_t result = write(fd, dmx, size);
-	return result == size;
+	return (size_t) result == size;
 }

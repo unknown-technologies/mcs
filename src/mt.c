@@ -339,7 +339,7 @@ void MTProcess(MT* mt, struct input_event* event)
 		}
 	} else if(event->type == EV_SYN) {
 		/* update ALL slots here */
-		for(unsigned int i = 0; i < mt->slot_cnt; i++) {
+		for(int i = 0; i < mt->slot_cnt; i++) {
 			MT_SLOT* slot = &mt->slots[i];
 			if(slot->id != slot->new_id ||
 					slot->active != slot->new_active) {

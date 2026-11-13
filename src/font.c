@@ -106,7 +106,6 @@ float GXiGetTextWidth(GXFont* font, BOOL alt, float size, const char* text)
 	float scale = size / (float) font->font->height;
 
 	float px = 0;
-	float py = 0;
 	float width = 0;
 
 	for(const char* c = text; *c; c++) {
@@ -120,7 +119,6 @@ float GXiGetTextWidth(GXFont* font, BOOL alt, float size, const char* text)
 				width = px;
 			}
 			px = 0;
-			py += fnt->height * scale;
 			continue;
 		} else if(!glyph) {
 			continue;

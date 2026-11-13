@@ -65,6 +65,8 @@ void UIDestroyLight(UIPanel* self)
 
 void UIProcessLightInput(UIPanel* self, MT_SLOT* slot, void* attachment)
 {
+	(void) attachment;
+
 	Light* light = (Light*) UIGetUserData(self);
 
 	UIProcessFader(&light->master_fader, slot);

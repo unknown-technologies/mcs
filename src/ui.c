@@ -148,7 +148,7 @@ void UIProcess(UI* ui)
 			touch_x = ui->width - width;
 		}
 
-		for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
+		for(int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 			MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
 			if(!slot || !slot->active || !slot->fresh) {
 				continue;
@@ -182,7 +182,7 @@ void UIProcessInput(UIPanel* self,
 		pos_y = GXGetFontHeight(&ui->deface, ui->status_size);
 	}
 
-	for(unsigned int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
+	for(int i = 0; i < MTGetSlotCount(&mcs->mt); i++) {
 		MT_SLOT* slot = MTGetSlot(&mcs->mt, i);
 		if(!slot || !slot->active) {
 			continue;
