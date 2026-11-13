@@ -180,7 +180,7 @@ BOOL MTInit(MT* mt)
 					/* found it */
 					char* event = strstr(handler,
 							"event");
-					if(event) {
+					if(event && strstr(handler, "mouse")) {
 						char* c = strchr(event, ' ');
 						if(c) {
 							*c = 0;
